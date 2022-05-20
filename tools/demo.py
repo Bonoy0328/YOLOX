@@ -156,6 +156,7 @@ class Predictor(object):
         with torch.no_grad():
             t0 = time.time()
             outputs = self.model(img)
+            logger.info("Infer res" + str(outputs))
             if self.decoder is not None:
                 outputs = self.decoder(outputs, dtype=outputs.type())
             outputs = postprocess(
@@ -163,6 +164,7 @@ class Predictor(object):
                 self.nmsthre, class_agnostic=True
             )
             logger.info("Infer time: {:.4f}s".format(time.time() - t0))
+
         return outputs, img_info
 
     def visual(self, output, img_info, cls_conf=0.35):
@@ -178,6 +180,7 @@ class Predictor(object):
         bboxes /= ratio
 
         cls = output[:, 6]
+        logger.info("class is :" + str(cls))
         scores = output[:, 4] * output[:, 5]
 
         vis_res = vis(img, bboxes, scores, cls, cls_conf, self.cls_names)
@@ -199,6 +202,7 @@ def image_demo(predictor, vis_folder, path, current_time, save_result):
             )
             os.makedirs(save_folder, exist_ok=True)
             save_file_name = os.path.join(save_folder, os.path.basename(image_name))
+            logger.info("class is :" + str(outputs))
             logger.info("Saving detection result in {}".format(save_file_name))
             cv2.imwrite(save_file_name, result_image)
         ch = cv2.waitKey(0)

@@ -63,9 +63,13 @@ class COCODataset(Dataset):
 
         self.coco = COCO(os.path.join(self.data_dir, "annotations", self.json_file))
         remove_useless_info(self.coco)
-        self.ids = self.coco.getImgIds()
-        self.class_ids = sorted(self.coco.getCatIds())
-        cats = self.coco.loadCats(self.coco.getCatIds())
+        self.catIds = self.coco.getCatIds(catNms=['banana','apple','orange',"broccoli","carrot"])
+        self.ids = []
+        for i in self.catIds:
+            self.ids += self.coco.getImgIds(catIds=i)
+        # self.ids = self.coco.getImgIds()
+        self.class_ids = sorted(self.catIds)
+        cats = self.coco.loadCats(self.catIds)
         self._classes = tuple([c["name"] for c in cats])
         self.imgs = None
         self.name = name
@@ -154,9 +158,10 @@ class COCODataset(Dataset):
         res = np.zeros((num_objs, 5))
 
         for ix, obj in enumerate(objs):
-            cls = self.class_ids.index(obj["category_id"])
-            res[ix, 0:4] = obj["clean_bbox"]
-            res[ix, 4] = cls
+            if self.class_ids.__contains__(obj["category_id"]):
+                cls = self.class_ids.index(obj["category_id"])
+                res[ix, 0:4] = obj["clean_bbox"]
+                res[ix, 4] = cls
 
         r = min(self.img_size[0] / height, self.img_size[1] / width)
         res[:, :4] *= r
